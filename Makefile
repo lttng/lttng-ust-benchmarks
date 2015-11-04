@@ -11,7 +11,7 @@ RANDOM_TP_OBJ = $(foreach i,$(shell seq $(RANDOM_TP_COUNT)), random_tp_$(i).tp.o
 
 .PHONY: all clean kernel-benchmark
 
-all: $(BIN) kernel-benchmark
+all: $(BIN)
 
 generated_tp.h:
 	./tpgen.py $(RANDOM_TP_COUNT)
