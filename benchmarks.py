@@ -3,16 +3,28 @@
 import collections
 import json, numbers, pprint, platform, tempfile, uuid
 import os, shutil, subprocess, signal
+import argparse
 import linux_cpu, lttng_kernel_benchmark
 import lttng
 
-runner_bin  = "./lttng-ust-benchmarks"
-props_dir   = "./jenkins_plot_data"
-js_out      = "./benchmarks.json"
-tmp_dir     = tempfile.mkdtemp()
-session_name     = str(uuid.uuid1())
-trace_path       = tmp_dir + "/" + session_name
+from subprocess import call
+
+
+runner_bin	= "./lttng-ust-benchmarks"
+props_dir	= "./jenkins_plot_data"
+js_out		= "./benchmarks.json"
+tmp_dir	= tempfile.mkdtemp()
+session_name	= str(uuid.uuid1())
+trace_path	= tmp_dir + "/" + session_name
 sessiond_pidfile = tmp_dir + "/lttng-sessiond.pid"
+
+unit_type = {
+	"start_time" : "s",
+	"run_time" : "s",
+	"ns_per_event" : "ns/event",
+	"start_overhead_s" : "s",
+	"start_overhead_pct" : "%"
+}
 
 def lttng_start(events = ["*"], domain_type = lttng.DOMAIN_UST):
 	if lttng.session_daemon_alive() == 0:
@@ -215,6 +227,19 @@ def write_plot_properties(data, dst_dir):
 		f.write("YVALUE=" + str(flat_data[key]) + "\n")
 		f.close()
 
+def write_lava_test_result(data, platform):
+	flat_data = data
+	for key in flat_data:
+		test_name = platform["machine"] + "." + str(key)
+		call(
+			['lava-test-case',
+			 test_name,
+			 '--result', "pass",
+			 '--measurement', str(flat_data[key]),
+			 '--units', unit_type.get(str(key).split('.')[-1],"unknown")
+			]
+		)
+
 def write_js(data, filename):
 	f = open(filename, "w")
 	pprint.pprint(data, f)
@@ -271,13 +296,20 @@ def main():
 
 	all_data = {}
 	all_avg = {}
+
+	lava_output = False
+
+	parser = argparse.ArgumentParser()
+	parser.add_argument("--lava-output", help="produce output for Lava", action="store_true")
+	args = parser.parse_args()
+
 	for cpu_count in reversed(range(1, linux_cpu.online_count+1)):
 		try:
 			linux_cpu.online_count = cpu_count
 		except:
 			print("Failed to set CPU count, skipping")
 			break
-		
+
 		data = do_benchmarks(5, 100)
 
 		flat_data = []
@@ -313,6 +345,10 @@ def main():
 	}
 	write_plot_properties(flatten_dict(all_avg), props_dir)
 	write_js(results, js_out)
+
+	if args.lava_output:
+		write_lava_test_result(flatten_dict(all_avg), results["platform"])
+
 
 def cleanup():
 	lttng.stop(session_name)
