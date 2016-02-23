@@ -18,6 +18,8 @@ session_name	= str(uuid.uuid1())
 trace_path	= tmp_dir + "/" + session_name
 sessiond_pidfile = tmp_dir + "/lttng-sessiond.pid"
 
+sessiond_logfile = open('sessiond.log', 'a')
+
 unit_type = {
 	"start_time" : "s",
 	"run_time" : "s",
@@ -28,9 +30,9 @@ unit_type = {
 
 def lttng_start(events = ["*"], domain_type = lttng.DOMAIN_UST):
 	if lttng.session_daemon_alive() == 0:
-		daemon_cmd  = "lttng-sessiond --daemonize --quiet"
+		daemon_cmd  = "lttng-sessiond --background"
 		daemon_cmd += " --pidfile " + sessiond_pidfile
-		subprocess.check_call(daemon_cmd, shell=True)
+		subprocess.check_call(daemon_cmd, shell=True, stdout=sessiond_logfile, stderr=sessiond_logfile)
 
 	lttng.destroy(session_name)
 	ret = lttng.create_snapshot(session_name, trace_path)
@@ -354,6 +356,7 @@ def cleanup():
 	lttng.stop(session_name)
 	lttng.destroy(session_name)
 	lttng_kernel_benchmark.unload_modules()
+	sessiond_logfile.close()
 
 	try:
 		f = open(sessiond_pidfile, "r")
