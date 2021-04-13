@@ -1,7 +1,7 @@
 BIN        = lttng-ust-benchmarks basic-benchmark basic-benchmark-ust \
              sha2-benchmark sha2-benchmark-ust basic-benchmark-gen-tp
-CFLAGS    += -std=gnu99 -g -O2 -Wall -D_GNU_SOURCE -D_LGPL_SOURCE -DNDEBUG $$(pkg-config --cflags lttng-ust)
-LDFLAGS   += -lrt -ldl $$(pkg-config --libs lttng-ust)
+CFLAGS    += -std=gnu99 -g -O2 -Wall -D_GNU_SOURCE -D_LGPL_SOURCE -DNDEBUG `pkg-config --cflags lttng-ust`
+LDFLAGS   += -lrt -ldl `(pkg-config --libs lttng-ust`
 UST_FLAGS  = -DWITH_UST
 ARTIFACTS  = message.tp.c message.tp.h sum.tp.c sum.tp.h \
              benchmarks.json jenkins_plot_data
