@@ -13,12 +13,14 @@ ARTIFACTS  = message.tp.c message.tp.h sum.tp.c sum.tp.h \
 RANDOM_TP_COUNT = 16
 RANDOM_TP_OBJ = $(foreach i,$(shell seq $(RANDOM_TP_COUNT)), random_tp_$(i).tp.o)
 
+PYTHON ?= python3
+
 .PHONY: all clean kernel-benchmark
 
 all: $(BIN)
 
 generated_tp.h:
-	./tpgen.py $(RANDOM_TP_COUNT)
+	$(PYTHON) ./tpgen.py $(RANDOM_TP_COUNT)
 
 lttng-ust-benchmarks: lttng-ust-benchmarks.c shared_events.o
 	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
@@ -51,7 +53,7 @@ kernel-benchmark:
 %.tp:;
 
 %.tp.o: %.tp generated_tp.h
-	CFLAGS="$(CFLAGS)" lttng-gen-tp $< -o $<.o -o $<.c -o $<.h
+	CFLAGS="$(CFLAGS)" $(PYTHON) lttng-gen-tp $< -o $<.o -o $<.c -o $<.h
 
 clean:
 	rm -rf $(BIN) $(ARTIFACTS) \
