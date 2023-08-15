@@ -203,11 +203,11 @@ def do_kernel_benchmark(nr_loops):
 def flatten_dict_internal(prefix, data, dst):
 	if issubclass(data.__class__, str):
 		dst[prefix] = data
-	elif issubclass(data.__class__, collections.Mapping):
+	elif issubclass(data.__class__, collections.abc.Mapping):
 		for key in data.keys():
 			fullprefix = prefix + "." + key if len(prefix) > 0 else key
 			flatten_dict_internal(fullprefix, data[key], dst)
-	elif issubclass(data.__class__, collections.Iterable):
+	elif issubclass(data.__class__, collections.abc.Iterable):
 		i = 0
 		for value in data:
 			fullprefix = prefix + "." + str(i)
