@@ -15,6 +15,8 @@ RANDOM_TP_OBJ = $(foreach i,$(shell seq $(RANDOM_TP_COUNT)), random_tp_$(i).tp.o
 
 PYTHON ?= python3
 
+LTTNG_GEN_TP ?= $(shell command -v lttng-gen-tp)
+
 .PHONY: all clean kernel-benchmark
 
 all: $(BIN)
@@ -53,7 +55,7 @@ kernel-benchmark:
 %.tp:;
 
 %.tp.o: %.tp generated_tp.h
-	CFLAGS="$(CFLAGS)" $(PYTHON) lttng-gen-tp $< -o $<.o -o $<.c -o $<.h
+	CFLAGS="$(CFLAGS)" $(PYTHON) $(LTTNG_GEN_TP) $< -o $<.o -o $<.c -o $<.h
 
 clean:
 	rm -rf $(BIN) $(ARTIFACTS) \
